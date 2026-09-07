@@ -6,15 +6,14 @@
   <img src="https://img.shields.io/badge/Leaflet.js-GIS-199900?style=for-the-badge&logo=leaflet&logoColor=white" alt="Leaflet" />
   <img src="https://img.shields.io/badge/Prophet-Forecasting-blue?style=for-the-badge" alt="Prophet" />
   <img src="https://img.shields.io/badge/Spatial-LISA%20%26%20Moran's%20I-orange?style=for-the-badge" alt="Moran" />
-  <img src="https://img.shields.io/badge/Cypress-E2E%20Tested-17202C?style=for-the-badge&logo=cypress&logoColor=white" alt="Cypress" />
 </p>
 
 ---
 
 ## 🔗 Live Demo
-> 🌐 **Kunjungi Live Demo Aplikasi:**  
+> 🌐 **Kunjungi Demo Aplikasi:**  
 > **[👉 Klik di Sini untuk Membuka WebGIS TBC Aceh Utara](https://webgis-tb-acehutara.onrender.com)**  
-> *(Ganti URL di atas dengan link hosting live kamu setelah dideploy di Render/Railway)*
+> *(Untuk demo instan saat server lokal aktif: [https://tangy-lizards-hang.loca.lt](https://tangy-lizards-hang.loca.lt))*
 
 ---
 
@@ -41,8 +40,6 @@ Aplikasi ini dikembangkan sebagai bagian dari Tugas Akhir / Riset Analisis Data 
   - Segmentasi kecamatan berbasis tingkat keparahan dan kebutuhan alokasi intervensi.
 - 📄 **Export Laporan PDF Dinamis**:
   - Unduh rekapitulasi data epidemiologi dan hasil analisis spasial dalam format PDF standar resmi via ReportLab.
-- 🧪 **Pengujian E2E Otomatis**:
-  - Diuji secara menyeluruh dengan suite pengujian end-to-end **Cypress**.
 
 ---
 
@@ -55,7 +52,6 @@ Aplikasi ini dikembangkan sebagai bagian dari Tugas Akhir / Riset Analisis Data 
 | **Data & Analisis** | Pandas, OpenPyXL, GeoJSON, Shapefile (SHP) |
 | **Spatial Modeling** | Global Moran's I, LISA Analysis, K-Means Clustering, Prophet Forecasting |
 | **Export Generator** | ReportLab (PDF Engine) |
-| **E2E Testing** | Cypress |
 
 ---
 
@@ -77,16 +73,14 @@ webgistb_acehutara/
 ├── templates/
 │   └── index.html                     # Tampilan utama Dashboard WebGIS
 │
-├── data/ & spreadsheets               # Dataset kasus, koordinat, dan output analisis
-│   ├── tbkecamatan.csv
-│   ├── kecamatan_coords.json
-│   ├── hasil_analisis_prophet (1).xlsx
-│   ├── hasil_analisis_spasial_TB_2021_2025.xlsx
-│   ├── hasil_global_moran.xlsx
-│   ├── hasil_lisa_detail.xlsx
-│   └── hasil_geb_kmeans_2026.xlsx
-│
-└── cypress/                           # Pengujian otomatis E2E Dashboard
+└── data/ & spreadsheets               # Dataset kasus, koordinat, dan output analisis
+    ├── tbkecamatan.csv
+    ├── kecamatan_coords.json
+    ├── hasil_analisis_prophet (1).xlsx
+    ├── hasil_analisis_spasial_TB_2021_2025.xlsx
+    ├── hasil_global_moran.xlsx
+    ├── hasil_lisa_detail.xlsx
+    └── hasil_geb_kmeans_2026.xlsx
 ```
 
 ---
@@ -99,7 +93,7 @@ git clone https://github.com/Azilatarigan01/webgis_tbacehutara.git
 cd webgis_tbacehutara
 ```
 
-### 2. Buat & Aktifkan Virtual Environment (Opsional tapi Direkomendasikan)
+### 2. Buat & Aktifkan Virtual Environment
 ```bash
 # Windows
 python -m venv venv
@@ -120,19 +114,6 @@ pip install -r requirements.txt
 python app.py
 ```
 Buka browser dan akses: `http://127.0.0.1:5000`
-
----
-
-## 🧪 Menjalankan Pengujian (Testing)
-
-Untuk menjalankan pengujian otomatis antarmuka dengan Cypress:
-```bash
-# Buka antarmuka interaktif Cypress
-npm run cypress:open
-
-# Atau jalankan headless test
-npm run cypress:run
-```
 
 ---
 
