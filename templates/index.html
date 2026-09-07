@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGIS Tuberkulosis Aceh Utara - Moran, LISA & Prophet</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+</head>
+
+<body>
+    <!-- Decorative Ambient Glow Shapes -->
+    <div class="bg-gradient-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand-section">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                </div>
+                <div>
+                    <h1 class="brand-name">WebGIS TB</h1>
+                    <span class="brand-subtitle">Aceh Utara</span>
+                </div>
+            </div>
+
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-tab="overview">
+                            <i class="fa-solid fa-chart-pie"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-tab="moran">
+                            <i class="fa-solid fa-globe"></i> Global Moran's I
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-tab="lisa">
+                            <i class="fa-solid fa-circle-nodes"></i> Kluster LISA
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-tab="prophet">
+                            <i class="fa-solid fa-arrow-trend-up"></i> Prediksi Prophet 2026
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <p>&copy; 2026 WebGIS TB Aceh Utara</p>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="page-title">
+                    <h1 id="tab-title">Dashboard Utama</h1>
+                    <p id="tab-subtitle">Ringkasan Kondisi TB, Analisis Spasial, dan Forecasting 2026</p>
+                </div>
+                <div class="header-actions">
+                    <button id="theme-toggle" class="theme-toggle-btn" title="Ganti Tema">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <div class="stat-info" style="text-align: right;">
+                        <span class="subtext" style="color: var(--text-secondary);">Waktu Sistem</span>
+                        <div style="font-weight: 600; font-size: 0.85rem;" id="live-time">2026-06-21</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- TAB 1: OVERVIEW -->
+            <section id="tab-overview" class="tab-content active">
+                <div class="card-grid">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3>Total Kecamatan</h3>
+                            <div class="value" id="summary-total-kec">27</div>
+                            <span class="subtext">Wilayah Analisis</span>
+                        </div>
+                        <div class="stat-icon-wrapper blue">
+                            <i class="fa-solid fa-city"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3>Total Kasus TB</h3>
+                            <div class="value" id="summary-total-cases">4.217</div>
+                            <span class="subtext">Periode 2021–2025</span>
+                        </div>
+                        <div class="stat-icon-wrapper purple">
+                            <i class="fa-solid fa-virus"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3>Prediksi Kasus TB 2026</h3>
+                            <div class="value" id="summary-pred-2026">922</div>
+                            <span class="subtext">Forecast Tahun 2026</span>
+                        </div>
+                        <div class="stat-icon-wrapper teal">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3 id="summary-spatial-title">Moran's I 2025</h3>
+                            <div class="value" id="summary-spatial-val">0,0932</div>
+                            <span class="subtext" id="summary-spatial-sub">Ada Autokorelasi Spasial</span>
+                        </div>
+                        <div class="stat-icon-wrapper yellow">
+                            <i class="fa-solid fa-globe"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2><i class="fa-solid fa-route"></i> Hubungan Spasial Penyakit Tuberkulosis</h2>
+                        </div>
+                        <p style="margin-bottom: 1rem; color: var(--text-secondary); line-height: 1.6;">
+                            Aplikasi WebGIS ini dirancang untuk mendeteksi autokorelasi spasial penyebaran kasus
+                            Tuberkulosis (TB) di Kabupaten Aceh Utara. Dengan menggunakan indeks <strong>Global Moran's
+                                I</strong> dan <strong>(Local Indicators of Spatial Association)</strong>, kita dapat
+                            mengidentifikasi lokasi-lokasi kluster kasus TB yang tinggi (hotspot) maupun rendah
+                            (coldspot). Selain itu, prediksi tren masa depan tahun <strong>2026</strong> diintegrasikan
+                            menggunakan model <strong>Prophet</strong> untuk membantu pembuat kebijakan dan instansi
+                            kesehatan merencanakan program penanggulangan secara spasial.
+                        </p>
+                        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                            <button onclick="switchTab('moran')"
+                                style="background: var(--accent-blue); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: var(--transition);">
+                                <i class="fa-solid fa-globe"></i> Buka Global Moran
+                            </button>
+                            <button onclick="switchTab('lisa')"
+                                style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: var(--transition);">
+                                <i class="fa-solid fa-circle-nodes"></i> Buka Peta Cluster LISA
+                            </button>
+                        </div>
+                    </div>
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2><i class="fa-solid fa-circle-info"></i> Panduan Warna Cluster</h2>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.85rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span class="badge badge-hh" style="width: 60px;">HH</span>
+                                <span>High-High (Hotspot kasus tinggi dikelilingi wilayah tinggi)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span class="badge badge-hl" style="width: 60px;">HL</span>
+                                <span>High-Low (Outlier kasus tinggi dikelilingi wilayah rendah)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span class="badge badge-lh" style="width: 60px;">LH</span>
+                                <span>Low-High (Outlier kasus rendah dikelilingi wilayah tinggi)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span class="badge badge-ll" style="width: 60px;">LL</span>
+                                <span>Low-Low (Coldspot kasus rendah dikelilingi wilayah rendah)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span class="badge badge-ns" style="width: 60px;">NS</span>
+                                <span>Tidak Signifikan (Pola kasus bersifat acak dan tidak membentuk klaster penularan)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: GLOBAL MORAN -->
+            <section id="tab-moran" class="tab-content">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-globe"></i> Tren Indeks Global Moran's I (2021-2025)</h2>
+                    </div>
+                    <div class="grid-2" style="grid-template-columns: 3fr 2fr;">
+                        <div class="chart-container">
+                            <canvas id="moranChart"></canvas>
+                        </div>
+                        <div>
+                            <h3 style="margin-bottom: 0.75rem; font-size: 1rem;">Keterangan Indeks</h3>
+                            <p
+                                style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
+                                Nilai Moran's I berkisar dari -1 hingga +1.
+                                <br>• <strong>Nilai Positif (> 0)</strong>: Menunjukkan adanya pengelompokkan spasial
+                                (nilai serupa berkumpul berdekatan).
+                                <br>• <strong>Nilai Negatif (&lt; 0)</strong>: Menunjukkan pola spasial menyebar (nilai
+                                berbeda saling berdekatan).
+                                <br>• <strong>Mendekati 0</strong>: Pola acak secara spasial (tidak ada hubungan
+                                spasial).
+                            </p>
+                            <div
+                                style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; font-size: 0.85rem;">
+                                <strong>Catatan Signifikansi:</strong> Cluster dianggap valid apabila nilai <em>p-value
+                                    &lt; 0.05</em>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-table"></i> Tabel Hasil Global Moran's I</h2>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="custom-table" id="moran-table">
+                            <thead>
+                                <tr>
+                                    <th>Tahun</th>
+                                    <th>Moran's I</th>
+                                    <th>Expectation</th>
+                                    <th>Variance</th>
+                                    <th>Z-Score</th>
+                                    <th>P-Value</th>
+                                    <th>Kesimpulan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="moran-table-body">
+                                <!-- Loaded via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: LISA CLUSTER -->
+            <section id="tab-lisa" class="tab-content">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-map-location-dot"></i> Peta Sebaran Kluster LISA per Kecamatan</h2>
+                        <div class="card-actions">
+                            <label for="lisa-year-select"
+                                style="font-size: 0.85rem; color: var(--text-secondary);">Pilih Tahun:</label>
+                            <select id="lisa-year-select" onchange="updateLisaView()">
+                                <!-- Loaded via JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="map-container" id="lisaMap"></div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-table-cells"></i> Detail Data LISA per Kecamatan</h2>
+                        <div class="card-actions">
+                            <div class="search-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="lisa-search" placeholder="Cari Kecamatan..."
+                                    onkeyup="filterLisaTable()">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="custom-table" id="lisa-table">
+                            <thead>
+                                <tr>
+                                    <th>Tahun</th>
+                                    <th>Kecamatan</th>
+                                    <th>Kasus TB</th>
+                                    <th>Local Moran's I</th>
+                                    <th>P-Value</th>
+                                    <th>Kluster</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lisa-table-body">
+                                <!-- Loaded via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: PROPHET PREDICTION -->
+            <section id="tab-prophet" class="tab-content">
+                <div class="card-grid">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3>Status Kerawanan Tinggi</h3>
+                            <div class="value" id="prophet-tinggi-count">3</div>
+                            <span class="subtext" style="color: var(--accent-red);">Kecamatan Risiko Tinggi</span>
+                        </div>
+                        <div class="stat-icon-wrapper"
+                            style="background: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.2);">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3>Status Kerawanan Sedang</h3>
+                            <div class="value" id="prophet-sedang-count">15</div>
+                            <span class="subtext" style="color: var(--accent-yellow);">Kecamatan Risiko Sedang</span>
+                        </div>
+                        <div class="stat-icon-wrapper"
+                            style="background: rgba(234, 179, 8, 0.15); color: var(--accent-yellow); border: 1px solid rgba(234, 179, 8, 0.2);">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3>Status Kerawanan Rendah</h3>
+                            <div class="value" id="prophet-rendah-count">8</div>
+                            <span class="subtext" style="color: var(--accent-green);">Kecamatan Risiko Rendah</span>
+                        </div>
+                        <div class="stat-icon-wrapper"
+                            style="background: rgba(34, 197, 94, 0.15); color: var(--accent-green); border: 1px solid rgba(34, 197, 94, 0.2);">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2><i class="fa-solid fa-map"></i> Peta Kerawanan CNR 2026 (Prophet)</h2>
+                        </div>
+                        <div class="map-container" id="prophetMap"></div>
+                    </div>
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2><i class="fa-solid fa-chart-line"></i> Tren Prediksi Bulanan Kasus TB 2026</h2>
+                        </div>
+                        <div class="chart-container" style="height: 420px;">
+                            <canvas id="prophetTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 1.5rem;">
+                    <!-- Tabel Prediksi -->
+                    <div class="content-card">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                            <h2><i class="fa-solid fa-table-list"></i> Tabel Prediksi CNR per Kecamatan (2026)</h2>
+                            <div class="export-buttons" style="display: flex; gap: 0.4rem;">
+                                <a href="/api/export/excel" class="btn btn-export" title="Unduh data Excel"><i class="fa-solid fa-file-excel"></i> Excel</a>
+                                <a href="/api/export/pdf" class="btn btn-export" title="Unduh Laporan PDF"><i class="fa-solid fa-file-pdf"></i> PDF</a>
+                                <a href="/api/export/spatial" class="btn btn-export" title="Unduh data Spasial GeoJSON"><i class="fa-solid fa-earth-americas"></i> GeoJSON</a>
+                            </div>
+                        </div>
+                        <div class="table-toolbar" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.25rem; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 1rem;">
+                            <div class="filter-group" style="display: flex; gap: 0.5rem;" id="category-filter-container">
+                                <button class="filter-btn active" data-filter="all" onclick="setCategoryFilter('all')">Semua Kategori</button>
+                                <button class="filter-btn" data-filter="tinggi" onclick="setCategoryFilter('tinggi')"><span class="dot dot-tinggi"></span> Tinggi</button>
+                                <button class="filter-btn" data-filter="sedang" onclick="setCategoryFilter('sedang')"><span class="dot dot-sedang"></span> Sedang</button>
+                                <button class="filter-btn" data-filter="rendah" onclick="setCategoryFilter('rendah')"><span class="dot dot-rendah"></span> Rendah</button>
+                            </div>
+                            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <span style="font-size: 0.8rem; color: var(--text-secondary);">Urutkan:</span>
+                                    <select id="prophet-table-sort" onchange="updateProphetSpatialView()" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px; padding: 0.4rem 0.5rem; font-size: 0.8rem; outline: none; cursor: pointer;">
+                                        <option value="rate_desc" selected>Rate Tertinggi</option>
+                                        <option value="cases_desc">Jumlah Kasus Tertinggi</option>
+                                        <option value="category_desc">Kategori Kerawanan</option>
+                                        <option value="name_asc">Nama Kecamatan</option>
+                                    </select>
+                                </div>
+                                <div class="search-box">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                    <input type="text" id="prophet-spatial-search" placeholder="Cari Kecamatan..." onkeyup="filterProphetSpatialTable()" style="width: 160px; font-size: 0.8rem; padding: 0.4rem 0.5rem 0.4rem 2rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-primary);">
+                                </div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);" id="filtered-count">
+                                    Menampilkan 27 kecamatan
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="custom-table" id="prophet-spatial-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px; text-align: center;">No.</th>
+                                        <th>Kecamatan</th>
+                                        <th>Estimasi Populasi</th>
+                                        <th>Prediksi Kasus</th>
+                                        <th>CNR 2026</th>
+                                        <th>Kategori Tingkat Kerawanan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="prophet-spatial-table-body">
+                                    <!-- Loaded via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom Main JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>

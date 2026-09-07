@@ -1,0 +1,13 @@
+{
+  "name": "webgistb_acehutara",
+  "version": "1.0.0",
+  "description": "WebGIS Tuberkulosis Aceh Utara dengan analisis spasial dan peramalan Prophet",
+  "main": "app.py",
+  "scripts": {
+    "test:run": "cypress run",
+    "test:open": "cypress open"
+  },
+  "devDependencies": {
+    "cypress": "^13.13.0"
+  }
+}
