@@ -95,8 +95,8 @@ webgistb_acehutara/
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/USERNAME_KAMU/NAMA_REPO.git
-cd NAMA_REPO
+git clone https://github.com/Azilatarigan01/webgis_tbacehutara.git
+cd webgis_tbacehutara
 ```
 
 ### 2. Buat & Aktifkan Virtual Environment (Opsional tapi Direkomendasikan)
