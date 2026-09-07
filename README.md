@@ -10,10 +10,29 @@
 
 ---
 
+## 🎬 Tampilan & Demo Interaktif Aplikasi
+
+### 1. Dashboard Utama & Peta Spasial Kasus TBC
+![Dashboard Utama WebGIS](docs/images/01_dashboard_utama.png)
+
+### 2. Analisis Autokorelasi Spasial (Global Moran's I)
+![Analisis Moran](docs/images/02_analisis_global_moran.png)
+
+### 3. Pola Klaster Spasial LISA (Hotspot & Coldspot)
+![Klaster LISA](docs/images/03_kluster_lisa_spasial.png)
+
+### 4. Peramalan Kasus Tahun 2026 (Model Prophet)
+![Prediksi Prophet 2026](docs/images/04_prediksi_prophet_2026.png)
+
+> 📹 **Video Walkthrough Demo**:  
+> Rekaman demo interaktif dapat dilihat di berkas: [`docs/images/demo_walkthrough.mp4`](docs/images/demo_walkthrough.mp4)
+
+---
+
 ## 🔗 Live Demo
-> 🌐 **Kunjungi Demo Aplikasi:**  
+> 🌐 **Akses Live Demo Aplikasi:**  
 > **[👉 Klik di Sini untuk Membuka WebGIS TBC Aceh Utara](https://webgis-tb-acehutara.onrender.com)**  
-> *(Untuk demo instan saat server lokal aktif: [https://tangy-lizards-hang.loca.lt](https://tangy-lizards-hang.loca.lt))*
+> *(Untuk mencoba saat server lokal aktif: [https://tangy-lizards-hang.loca.lt](https://tangy-lizards-hang.loca.lt))*
 
 ---
 
@@ -64,6 +83,9 @@ webgistb_acehutara/
 ├── requirements.txt                   # Daftar dependensi Python
 ├── Procfile                           # Konfigurasi deployment server
 ├── .gitignore                         # File pengabaian Git
+│
+├── docs/
+│   └── images/                        # Screenshots & Video Walkthrough
 │
 ├── static/
 │   ├── css/                           # Styling aplikasi
