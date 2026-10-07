@@ -8,11 +8,26 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+static_folder_path = os.path.join(BASE_DIR, 'public', 'static') if os.path.isdir(os.path.join(BASE_DIR, 'public', 'static')) else os.path.join(BASE_DIR, 'static')
+
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, 'templates'),
+    static_folder=static_folder_path,
+    static_url_path='/static'
+)
+
+# File paths
+COORDS_FILE = os.path.join(BASE_DIR, 'kecamatan_coords.json')
+SPATIAL_FILE = os.path.join(BASE_DIR, 'hasil_analisis_spasial_TB_2021_2025.xlsx')
+KMEANS_FILE = os.path.join(BASE_DIR, 'hasil_geb_kmeans_2026.xlsx')
+PROPHET_FILE = os.path.join(BASE_DIR, 'hasil_analisis_prophet (1).xlsx')
+PREDIKSI_GEOJSON = os.path.join(BASE_DIR, 'prediksi_tb_aceh_utara_2026.geojson')
 
 # Load coordinates
-COORDS_FILE = 'kecamatan_coords.json'
-with open(COORDS_FILE, 'r') as f:
+with open(COORDS_FILE, 'r', encoding='utf-8') as f:
     kecamatan_coords = json.load(f)
 
 # Helper function to sanitize float values (handling NaN or Inf which aren't valid JSON)
@@ -59,7 +74,7 @@ def index():
 @app.route('/api/summary')
 def get_summary():
     try:
-        moran_df = pd.read_excel('hasil_analisis_spasial_TB_2021_2025.xlsx', sheet_name='Global_Moran')
+        moran_df = pd.read_excel(SPATIAL_FILE, sheet_name='Global_Moran')
         if 'Variance_Simulation' not in moran_df.columns and 'Z_Simulation' in moran_df.columns:
             moran_df['Variance_Simulation'] = moran_df.apply(
                 lambda row: ((row['Moran_I'] - row['Expected_I']) / row['Z_Simulation']) ** 2 if row['Z_Simulation'] != 0 else 0.0,
@@ -72,7 +87,7 @@ def get_summary():
             'P_Simulation': 'p-value'
         })
         
-        lisa_df = pd.read_excel('hasil_analisis_spasial_TB_2021_2025.xlsx', sheet_name='Detail_LISA').rename(columns={
+        lisa_df = pd.read_excel(SPATIAL_FILE, sheet_name='Detail_LISA').rename(columns={
             'kecamatan': 'Kecamatan',
             'Kasus': 'TB',
             'Local_Moran_I': 'Local_I',
@@ -82,7 +97,7 @@ def get_summary():
         })
         lisa_df['Kecamatan'] = lisa_df['Kecamatan'].apply(standardize_kecamatan)
         
-        webgis_df = pd.read_excel('hasil_geb_kmeans_2026.xlsx', sheet_name='KMeans_Final')
+        webgis_df = pd.read_excel(KMEANS_FILE, sheet_name='KMeans_Final')
         webgis_df['kecamatan'] = webgis_df['kecamatan'].apply(standardize_kecamatan)
         
         total_prediksi_2026 = int(webgis_df['Prediksi_2026'].round().sum()) if not webgis_df.empty else 0
@@ -104,7 +119,7 @@ def get_summary():
 @app.route('/api/moran')
 def get_moran():
     try:
-        df = pd.read_excel('hasil_analisis_spasial_TB_2021_2025.xlsx', sheet_name='Global_Moran')
+        df = pd.read_excel(SPATIAL_FILE, sheet_name='Global_Moran')
         if 'Variance_Simulation' not in df.columns and 'Z_Simulation' in df.columns:
             df['Variance_Simulation'] = df.apply(
                 lambda row: ((row['Moran_I'] - row['Expected_I']) / row['Z_Simulation']) ** 2 if row['Z_Simulation'] != 0 else 0.0,
@@ -124,7 +139,7 @@ def get_moran():
 @app.route('/api/lisa')
 def get_lisa():
     try:
-        df = pd.read_excel('hasil_analisis_spasial_TB_2021_2025.xlsx', sheet_name='Detail_LISA')
+        df = pd.read_excel(SPATIAL_FILE, sheet_name='Detail_LISA')
         df = df.rename(columns={
             'kecamatan': 'Kecamatan',
             'Kasus': 'TB',
@@ -160,7 +175,7 @@ def get_lisa():
 @app.route('/api/prophet_trend')
 def get_prophet_trend():
     try:
-        df = pd.read_excel('hasil_analisis_prophet (1).xlsx', sheet_name='Forecast_2026')
+        df = pd.read_excel(PROPHET_FILE, sheet_name='Forecast_2026')
         df['Bulan'] = pd.to_datetime(df['ds']).dt.strftime('%B %Y')
         df = df.rename(columns={
             'Prediksi_Bulat': 'Prediksi',
@@ -173,7 +188,7 @@ def get_prophet_trend():
 @app.route('/api/prophet_spatial')
 def get_prophet_spatial():
     try:
-        df = pd.read_excel('hasil_geb_kmeans_2026.xlsx', sheet_name='KMeans_Final')
+        df = pd.read_excel(KMEANS_FILE, sheet_name='KMeans_Final')
         df['kecamatan'] = df['kecamatan'].apply(standardize_kecamatan)
         
         df_mapped = pd.DataFrame()
@@ -216,7 +231,7 @@ def get_prophet_spatial():
 @app.route('/api/export/excel')
 def export_excel():
     try:
-        df = pd.read_excel('hasil_geb_kmeans_2026.xlsx', sheet_name='KMeans_Final')
+        df = pd.read_excel(KMEANS_FILE, sheet_name='KMeans_Final')
         df['kecamatan'] = df['kecamatan'].apply(standardize_kecamatan)
         
         df_mapped = pd.DataFrame()
@@ -243,7 +258,7 @@ def export_excel():
 @app.route('/api/export/spatial')
 def export_spatial():
     try:
-        geojson_path = 'prediksi_tb_aceh_utara_2026.geojson'
+        geojson_path = PREDIKSI_GEOJSON
         if not os.path.exists(geojson_path):
             return jsonify({'error': 'GeoJSON file not found'}), 404
         return send_file(
@@ -258,7 +273,7 @@ def export_spatial():
 @app.route('/api/export/pdf')
 def export_pdf():
     try:
-        df = pd.read_excel('hasil_geb_kmeans_2026.xlsx', sheet_name='KMeans_Final')
+        df = pd.read_excel(KMEANS_FILE, sheet_name='KMeans_Final')
         df['kecamatan'] = df['kecamatan'].apply(standardize_kecamatan)
         df_sorted = df.sort_values(by='Rate_Prediksi_2026', ascending=False)
         

@@ -1,0 +1,10 @@
+import os
+import sys
+
+# Ensure root directory is included in sys.path for serverless execution
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(CURRENT_DIR)
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+
+from app import app
